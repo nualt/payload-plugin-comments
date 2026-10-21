@@ -1,7 +1,7 @@
 {
-  "name": "payload-plugin-comments",
-  "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "name": "@nualt/payload-plugin-comments",
+  "version": "0.0.0",
+  "description": "Inline comment threads on Payload rich text (Lexical), in English and French.",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -105,15 +105,21 @@
       }
     },
     "main": "./dist/index.js",
-    "types": "./dist/index.d.ts"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "esbuild",
-      "unrs-resolver"
-    ]
+    "types": "./dist/index.d.ts",
+    "access": "public"
   },
   "registry": "https://registry.npmjs.org/",
-  "dependencies": {}
+  "dependencies": {},
+  "keywords": [
+    "payload",
+    "payload-plugin",
+    "lexical",
+    "comments",
+    "collaboration",
+    "cms"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nualt/payload-plugin-comments.git"
+  }
 }

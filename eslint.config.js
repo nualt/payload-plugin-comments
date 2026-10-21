@@ -23,6 +23,8 @@ export const defaultESLintIgnores = [
 ]
 
 export default [
+  // Le modèle déclarait cette liste sans l'appliquer : le lint relisait dist/.
+  { ignores: defaultESLintIgnores },
   ...payloadEsLintConfig,
   {
     rules: {
