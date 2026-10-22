@@ -1,0 +1,100 @@
+// Surlignages de commentaires actifs (MarkNode). Les fils resolus n'ont
+// plus de mark dans l'editeur — voir unwrap / rewrap dans feature.client.tsx.
+
+.rich-text-lexical mark {
+  background: color-mix(in srgb, var(--theme-warning-200, #fde68a) 80%, transparent);
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-warning-300, #fcd34d) 90%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-warning-400, #fbbf24) 45%, transparent);
+  }
+}
+
+[data-theme='dark'] .rich-text-lexical mark {
+  background: color-mix(in srgb, var(--theme-warning-400, #fbbf24) 55%, transparent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-warning-300, #fcd34d) 65%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-warning-200, #fde68a) 35%, transparent);
+  }
+}
+
+// Popup d'apercu au survol d'un surlignage (portal sur document.body).
+.comments-mark-preview {
+  position: absolute;
+  z-index: var(--z-modal, 100);
+  width: min(18rem, calc(100vw - 1.5rem));
+  padding: 0.65rem 0.75rem;
+  background: var(--theme-elevation-0);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--theme-elevation-1000, #000) 12%, transparent);
+  font-size: 0.8125rem;
+  pointer-events: auto;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+  }
+
+  &__quote {
+    margin: 0 0 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--theme-warning-400);
+    color: var(--theme-elevation-500);
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.35;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  &__author {
+    font-weight: 600;
+    color: var(--theme-elevation-800);
+  }
+
+  &__badge {
+    display: inline-flex;
+    padding: 0.1rem 0.4rem;
+    background: var(--theme-elevation-100);
+    border-radius: var(--style-radius-s);
+    color: var(--theme-elevation-600);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  &__content {
+    margin: 0 0 0.6rem;
+    color: var(--theme-elevation-700);
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+}

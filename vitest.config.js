@@ -18,6 +18,8 @@ export default defineConfig(() => {
     ],
     test: {
       environment: 'node',
+      include: ['dev/**/*.spec.ts'],
+      exclude: ['dev/e2e.spec.ts'],
       hookTimeout: 30_000,
       testTimeout: 30_000,
     },

@@ -1,75 +1,70 @@
-import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { MongoMemoryReplSet } from 'mongodb-memory-server'
+import { commentsFeature, commentsPlugin } from '@nualt/payload-plugin-comments'
+import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import {
+  FixedToolbarFeature,
+  InlineToolbarFeature,
+  lexicalEditor,
+} from '@payloadcms/richtext-lexical'
+import { en } from '@payloadcms/translations/languages/en'
+import { fr } from '@payloadcms/translations/languages/fr'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { payloadPluginComments } from 'payload-plugin-comments'
-import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
 
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-if (!process.env.ROOT_DIR) {
-  process.env.ROOT_DIR = dirname
-}
-
-const buildConfigWithMemoryDB = async () => {
-  if (process.env.NODE_ENV === 'test') {
-    const memoryDB = await MongoMemoryReplSet.create({
-      replSet: {
-        count: 3,
-        dbName: 'payloadmemory',
-      },
-    })
-
-    process.env.DATABASE_URL = `${memoryDB.getUri()}&retryWrites=true`
-  }
-
-  return buildConfig({
-    admin: {
-      importMap: {
-        baseDir: path.resolve(dirname),
-      },
+export default buildConfig({
+  admin: {
+    importMap: {
+      baseDir: dirname,
+      importMapFile: path.resolve(dirname, 'app/(payload)/admin/importMap.js'),
     },
-    collections: [
-      {
-        slug: 'posts',
-        fields: [],
-      },
-      {
-        slug: 'media',
-        fields: [],
-        upload: {
-          staticDir: path.resolve(dirname, 'media'),
+  },
+  collections: [
+    {
+      slug: 'posts',
+      admin: { useAsTitle: 'title' },
+      fields: [
+        { name: 'title', type: 'text', required: true },
+        {
+          name: 'content',
+          type: 'richText',
+          editor: lexicalEditor({
+            features: ({ defaultFeatures }) => [
+              ...defaultFeatures,
+              FixedToolbarFeature(),
+              InlineToolbarFeature(),
+              commentsFeature(),
+            ],
+          }),
         },
-      },
-    ],
-    db: mongooseAdapter({
-      ensureIndexes: true,
-      url: process.env.DATABASE_URL || '',
+      ],
+    },
+  ],
+  db: sqliteAdapter({
+    client: {
+      url:
+        process.env.NODE_ENV === 'test'
+          ? 'file::memory:'
+          : `file:${path.resolve(dirname, 'dev.db')}`,
+    },
+  }),
+  editor: lexicalEditor(),
+  email: testEmailAdapter,
+  i18n: { fallbackLanguage: 'en', supportedLanguages: { en, fr } },
+  onInit: seed,
+  plugins: [
+    commentsPlugin({
+      canModerate:
+        process.env.NODE_ENV === 'test'
+          ? ({ req }) => req.user?.email === 'moderator@example.test'
+          : undefined,
+      collections: ['posts'],
     }),
-    editor: lexicalEditor(),
-    email: testEmailAdapter,
-    onInit: async (payload) => {
-      await seed(payload)
-    },
-    plugins: [
-      payloadPluginComments({
-        collections: {
-          posts: true,
-        },
-      }),
-    ],
-    secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
-    sharp,
-    typescript: {
-      outputFile: path.resolve(dirname, 'payload-types.ts'),
-    },
-  })
-}
-
-export default buildConfigWithMemoryDB()
+  ],
+  secret: process.env.PAYLOAD_SECRET || 'local-development-only-secret',
+  typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
+})
