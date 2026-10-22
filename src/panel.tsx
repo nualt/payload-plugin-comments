@@ -734,7 +734,9 @@ export function CommentsPanel({
         }}
       >
         {thread.root.quote ? (
-          <blockquote className={`${baseClass}__quote`}>« {thread.root.quote} »</blockquote>
+          <blockquote className={`${baseClass}__quote`}>
+            {t('plugin-comments:quote', { quote: thread.root.quote })}
+          </blockquote>
         ) : null}
 
         {renderMessage(thread, thread.root, 'root')}
@@ -827,7 +829,9 @@ export function CommentsPanel({
               key={pendingDraft.threadId}
             >
               {pendingDraft.quote ? (
-                <blockquote className={`${baseClass}__quote`}>« {pendingDraft.quote} »</blockquote>
+                <blockquote className={`${baseClass}__quote`}>
+                  {t('plugin-comments:quote', { quote: pendingDraft.quote })}
+                </blockquote>
               ) : null}
               <div className={`${baseClass}__reply-form`}>
                 {}

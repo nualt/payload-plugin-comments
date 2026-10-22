@@ -422,7 +422,9 @@ function CommentMarkPreviewPlugin() {
       style={{ left: preview.left, top: preview.top }}
     >
       {thread.quote ? (
-        <p className="comments-mark-preview__quote">« {truncate(thread.quote, 80)} »</p>
+        <p className="comments-mark-preview__quote">
+          {t('plugin-comments:quote', { quote: truncate(thread.quote, 80) })}
+        </p>
       ) : null}
       <div className="comments-mark-preview__head">
         <span className="comments-mark-preview__author">{thread.author}</span>

@@ -16,6 +16,7 @@ export const en = {
   loading: 'Loading…',
   noPending: 'No pending comments.',
   open: 'To do',
+  quote: '“{{quote}}”',
   reopen: 'Reopen thread',
   replies_one: '{{count}} reply',
   replies_other: '{{count}} replies',

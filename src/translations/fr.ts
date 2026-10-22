@@ -16,6 +16,7 @@ export const fr = {
   loading: 'Chargement…',
   noPending: 'Aucun commentaire en attente.',
   open: 'À traiter',
+  quote: '«\u00a0{{quote}}\u00a0»',
   reopen: 'Rouvrir le fil',
   replies_one: '{{count}} réponse',
   replies_other: '{{count}} réponses',
