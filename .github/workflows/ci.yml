@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm exec tsc --project dev/tsconfig.json --noEmit
+      - run: pnpm test:int
+      - run: pnpm test:int:postgres
+        env:
+          DATABASE_URI: postgres://postgres:postgres@127.0.0.1:5432/postgres
+      - run: pnpm test:int:mongodb
+      - name: Verify publishable tarball
+        run: |
+          pnpm pack
+          tar -tzf nualt-payload-plugin-comments-*.tgz > tarball-files.txt
+          grep -Fx 'package/dist/index.js' tarball-files.txt
+          grep -Fx 'package/dist/exports/client.js' tarball-files.txt
+          grep -Fx 'package/CHANGELOG.md' tarball-files.txt
+          if grep -Ev '^package/(dist/.*|README.md|LICENSE|CHANGELOG.md|package.json)$' tarball-files.txt; then
+            exit 1
+          fi
+          tar -xOf nualt-payload-plugin-comments-*.tgz package/package.json | node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import { readFileSync } from "node:fs";
+            const pkg = JSON.parse(readFileSync(0, "utf8"));
+            assert.equal(pkg.main, "./dist/index.js");
+            assert.equal(pkg.types, "./dist/index.d.ts");
+            for (const [entry, file] of [[".", "index"], ["./client", "exports/client"]]) {
+              assert.deepEqual(pkg.exports[entry], {
+                import: `./dist/${file}.js`, types: `./dist/${file}.d.ts`, default: `./dist/${file}.js`
+              });
+            }
+          '

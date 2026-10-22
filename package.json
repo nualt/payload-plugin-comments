@@ -1,8 +1,13 @@
 {
   "name": "@nualt/payload-plugin-comments",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Inline comment threads on Payload rich text (Lexical), in English and French.",
   "license": "MIT",
+  "author": "Thomas Sarazin (https://github.com/nualt)",
+  "homepage": "https://github.com/nualt/payload-plugin-comments#readme",
+  "bugs": {
+    "url": "https://github.com/nualt/payload-plugin-comments/issues"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -19,7 +24,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
@@ -106,14 +112,20 @@
     "types": "./dist/index.d.ts",
     "access": "public"
   },
-  "registry": "https://registry.npmjs.org/",
   "keywords": [
     "payload",
     "payload-plugin",
     "lexical",
     "comments",
     "collaboration",
-    "cms"
+    "cms",
+    "payloadcms",
+    "payload-cms",
+    "plugin",
+    "richtext",
+    "inline-comments",
+    "annotations",
+    "i18n"
   ],
   "repository": {
     "type": "git",

@@ -9,12 +9,15 @@ export { commentsFeature } from './feature.server.js'
 export type { CommentsTranslationKeys, CommentsTranslations } from './translations/index.js'
 
 export type CommentsPluginConfig = {
+  /** Server-side permission to edit or delete other authors' comments. Defaults to no moderation. */
   canModerate?: (args: { req: PayloadRequest }) => boolean | Promise<boolean>
   /** Collections receiving the sidebar. Add commentsFeature() to each rich text editor yourself. */
   collections: CollectionSlug[]
-  /** Keeps stored fields and MarkNode support, hides commenting UI. */
+  /** Hides commenting UI while retaining stored fields and MarkNode support. Defaults to false. */
   disabled?: boolean
+  /** Slug of the collection storing comments. Defaults to 'comments'. */
   slug?: string
+  /** Auth collection used for comment authors and ownership checks. Defaults to 'users'. */
   usersCollection?: CollectionSlug
 }
 

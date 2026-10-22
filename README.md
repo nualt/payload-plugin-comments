@@ -1,8 +1,26 @@
 # @nualt/payload-plugin-comments
 
+[![npm version](https://img.shields.io/npm/v/@nualt/payload-plugin-comments)](https://www.npmjs.com/package/@nualt/payload-plugin-comments)
+[![CI](https://github.com/nualt/payload-plugin-comments/actions/workflows/ci.yml/badge.svg)](https://github.com/nualt/payload-plugin-comments/actions/workflows/ci.yml)
+
 Inline comment threads for Payload 3.90 and Lexical. Select a passage, comment in the admin sidebar, reply, resolve, reopen or delete a thread. Includes English and French; the panel follows the admin language. The plugin does not change your public frontend.
 
 Tested with SQLite, PostgreSQL and MongoDB (replica set).
+
+![A highlighted passage in the Lexical editor and its comment thread in the admin sidebar](https://raw.githubusercontent.com/nualt/payload-plugin-comments/main/docs/panel.png)
+
+## Compatibility
+
+| Package / runtime | Supported versions |
+| --- | --- |
+| This plugin | `0.x` targets Payload 3 |
+| Payload, its Lexical editor, UI and translations | `^3.90.0` |
+| React and React DOM | `^19` |
+| Node.js | `>=20.18.1` |
+| pnpm (development and packaging) | `^9 \|\| ^10 \|\| ^11`; CI uses pnpm 11 and Node 22 |
+| Databases tested | SQLite, PostgreSQL 16, MongoDB 7 replica set |
+
+Payload 4 is not supported yet. Releases follow Semantic Versioning; each plugin major version documents its Payload compatibility. See the [CHANGELOG](CHANGELOG.md) for release details.
 
 ## Installation
 
@@ -133,3 +151,7 @@ Source exports are used during development; publishing uses `dist/`. Build befor
 ## Inherited limits
 
 The panel loads up to 200 messages per document. Reopening a resolved thread restores its highlight at the first matching text node, using the stored quote (up to 120 characters). Repeated passages or formatting split across nodes may need manual correction. These behaviors are retained from the original feature; pagination and more precise anchors are outside this port.
+
+## License
+
+[MIT](LICENSE).
