@@ -2,6 +2,8 @@
 
 Inline comment threads for Payload 3.90 and Lexical. Select a passage, comment in the admin sidebar, reply, resolve, reopen or delete a thread. Includes English and French; the panel follows the admin language. The plugin does not change your public frontend.
 
+Tested with SQLite, PostgreSQL and MongoDB (replica set).
+
 ## Installation
 
 ```sh
@@ -61,7 +63,7 @@ Save a new document before commenting. Saving a comment stores its message separ
 
 By default, any authenticated user can read comments. Only users authenticated through the configured `usersCollection` can create comments. Only the author can update/delete their messages, including resolving their own threads. The author is always forced to the authenticated user on create and cannot be changed on update. Deleting a root deletes all its replies only if the requesting user can delete each one; otherwise, the entire operation is refused before deleting any message. `canModerate` is evaluated on the server; the UI gets its result from the collection's `/moderation` endpoint. No role or user name field is required; display names fall back to email and then “User” / “Utilisateur”.
 
-Without database transactions, an unexpected failure during a cascade (other than a permission refusal caught by the pre-check) can still leave a partial deletion. For SQLite, enable transactions with `sqliteAdapter({ client: { url: '...' }, transactionOptions: {} })` to roll back the whole operation on failure.
+Permission refusals leave the entire thread intact on all three adapters. With the default transactions on PostgreSQL and MongoDB (replica set), integration tests also verify that an unexpected failure after two reply deletions rolls back the whole cascade, preserving all messages and parent links. MongoDB requires a replica set for these transactions. Without database transactions, an unexpected failure during a cascade (other than a permission refusal caught by the pre-check) can still leave a partial deletion. SQLite transactions remain disabled in the example and default test suite; enable them with `sqliteAdapter({ client: { url: '...' }, transactionOptions: {} })` when rollback is required.
 
 These permissions are independent of the host document's access rules: this plugin does not provide tenant or per-document isolation. If your application requires those, adapt collection access before exposing comments to its users. Local API calls follow Payload's usual `overrideAccess` behavior; use `overrideAccess: false` and `user` when enforcing user permissions. The cascade pre-check always enforces the requesting user's delete permissions on replies, including when the root is deleted with `overrideAccess: true`. Creation also requires a user from `usersCollection` for author attribution. Ownership checks compare both the auth collection and ID; an explicit `canModerate` callback may grant moderation to other authenticated identities.
 
@@ -110,10 +112,21 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm test:int
+pnpm test:int:mongodb
 pnpm test:e2e
 ```
 
-The example at `http://localhost:3000/admin` uses SQLite (`dev/dev.db`) and seeds `dev@payloadcms.com` / `test`. Use these credentials only for local development. Tests use a separate in-memory database. No database daemon is required. Both admin languages are enabled. The integration suite exercises ownership, moderation, replies, cascading deletion, disabled configuration and Lexical mark serialization.
+The example at `http://localhost:3000/admin` defaults to SQLite (`dev/dev.db`) and seeds `dev@payloadcms.com` / `test`. Use these credentials only for local development. Set `DATABASE_ADAPTER=sqlite|postgres|mongodb` to choose an adapter; PostgreSQL and MongoDB outside tests require `DATABASE_URI`. Both admin languages are enabled.
+
+`pnpm test:int` always uses in-memory SQLite with no database daemon. `pnpm test:int:mongodb` starts and stops a single-member `MongoMemoryReplSet`, using an isolated database and a binary cache under `node_modules/.cache/`; the first run downloads MongoDB. PostgreSQL tests require a fresh disposable database. For example:
+
+```sh
+docker run -d --rm --name ppc-pg -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:55432:5432 postgres:16-alpine
+DATABASE_URI=postgres://postgres:postgres@127.0.0.1:55432/postgres pnpm test:int:postgres
+docker stop ppc-pg
+```
+
+The suite exercises ownership, moderation, replies, cascading deletion, disabled configuration and Lexical mark serialization. The mid-cascade rollback test runs on PostgreSQL and MongoDB and is skipped on the default SQLite configuration, which has no transactions.
 
 Source exports are used during development; publishing uses `dist/`. Build before packing or publishing. No publication is performed by these scripts.
 

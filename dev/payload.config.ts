@@ -1,4 +1,6 @@
 import { commentsFeature, commentsPlugin } from '@nualt/payload-plugin-comments'
+import { mongooseAdapter } from '@payloadcms/db-mongodb'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import {
   FixedToolbarFeature,
@@ -15,6 +17,28 @@ import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
+const adapter = process.env.DATABASE_ADAPTER ?? 'sqlite'
+const db = (() => {
+  if (adapter === 'sqlite') {
+    return sqliteAdapter({
+      client: {
+        url:
+          process.env.NODE_ENV === 'test'
+            ? 'file::memory:'
+            : `file:${path.resolve(dirname, 'dev.db')}`,
+      },
+    })
+  }
+  if (adapter !== 'postgres' && adapter !== 'mongodb') {
+    throw new Error(`Unknown DATABASE_ADAPTER: ${adapter}`)
+  }
+  if (!process.env.DATABASE_URI) {
+    throw new Error(`DATABASE_URI is required for ${adapter}`)
+  }
+  return adapter === 'postgres'
+    ? postgresAdapter({ pool: { connectionString: process.env.DATABASE_URI } })
+    : mongooseAdapter({ ensureIndexes: true, url: process.env.DATABASE_URI })
+})()
 
 export default buildConfig({
   admin: {
@@ -44,14 +68,7 @@ export default buildConfig({
       ],
     },
   ],
-  db: sqliteAdapter({
-    client: {
-      url:
-        process.env.NODE_ENV === 'test'
-          ? 'file::memory:'
-          : `file:${path.resolve(dirname, 'dev.db')}`,
-    },
-  }),
+  db,
   editor: lexicalEditor(),
   email: testEmailAdapter,
   i18n: { fallbackLanguage: 'en', supportedLanguages: { en, fr } },

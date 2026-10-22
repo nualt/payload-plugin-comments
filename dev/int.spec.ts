@@ -1,21 +1,16 @@
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest } from 'payload'
 
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
+import type { Comment, User } from './payload-types.js'
+
 let payload: Payload
-let author: { id: number }
-let other: { id: number }
-let moderator: { id: number }
-const data = {
-  author: 0,
-  content: 'A comment',
-  documentCollection: 'posts',
-  documentId: '1',
-  fieldPath: 'content',
-  threadId: 'thread-1',
-}
+let author: User
+let other: User
+let moderator: User
+let data: Omit<Comment, 'createdAt' | 'id' | 'updatedAt'>
 
 beforeAll(async () => {
   payload = await getPayload({ config })
@@ -31,13 +26,22 @@ beforeAll(async () => {
     collection: 'users',
     data: { email: 'moderator@example.test', password: 'test' },
   })
+  const post = await payload.create({ collection: 'posts', data: { title: 'Commented post' } })
+  data = {
+    author: author.id,
+    content: 'A comment',
+    documentCollection: 'posts',
+    documentId: String(post.id),
+    fieldPath: 'content',
+    threadId: 'thread-1',
+  }
 })
 
 afterAll(async () => {
   await payload?.destroy()
 })
 
-const asUser = (user: { id: number }) => ({ ...user, collection: 'users' as const })
+const asUser = (user: User) => ({ ...user, collection: 'users' as const })
 
 describe('comment threads with real Payload access checks', () => {
   test('forces the logged-in author, preserves author on update, resolves and cascades replies', async () => {
@@ -203,12 +207,92 @@ describe('comment threads with real Payload access checks', () => {
       sort: 'id',
       where: { id: { in: [root.id, ownReply.id, otherReply.id] } },
     })
-    expect(remaining.docs.map(({ id, parent }) => ({ id, parent }))).toEqual([
-      { id: root.id, parent: null },
-      { id: ownReply.id, parent: root.id },
-      { id: otherReply.id, parent: root.id },
-    ])
+    expect(remaining.totalDocs).toBe(3)
+    expect(remaining.docs.map(({ id, parent }) => ({ id, parent: parent ?? null }))).toEqual(
+      expect.arrayContaining([
+        { id: root.id, parent: null },
+        { id: ownReply.id, parent: root.id },
+        { id: otherReply.id, parent: root.id },
+      ]),
+    )
   })
+
+  test.skipIf((process.env.DATABASE_ADAPTER ?? 'sqlite') === 'sqlite')(
+    'rolls back two actual reply deletions when the cascade fails unexpectedly',
+    async () => {
+      const root = await payload.create({
+        collection: 'comments',
+        data,
+        overrideAccess: false,
+        user: asUser(author),
+      })
+      const first = await payload.create({
+        collection: 'comments',
+        data: { ...data, parent: root.id },
+        overrideAccess: false,
+        user: asUser(author),
+      })
+      const second = await payload.create({
+        collection: 'comments',
+        data: { ...data, parent: root.id },
+        overrideAccess: false,
+        user: asUser(author),
+      })
+      const req: Partial<PayloadRequest> = {}
+      const transactionIDs = new Set<unknown>()
+      const deletedIDs: Array<Comment['id']> = []
+      const hooks = payload.collections.comments.config.hooks
+      const previous = hooks.afterDelete
+      hooks.afterDelete = [
+        ...(previous ?? []),
+        async ({ doc, req: hookReq }) => {
+          expect(hookReq).toBe(req)
+          const transactionID = await hookReq.transactionID
+          expect(transactionID).toBeTruthy()
+          transactionIDs.add(transactionID)
+          deletedIDs.push(doc.id)
+          const remaining = await payload.find({
+            collection: 'comments',
+            req: hookReq,
+            where: { id: { in: deletedIDs } },
+          })
+          expect(remaining.totalDocs).toBe(0)
+          if (deletedIDs.length === 2) {
+            throw new Error('Unexpected failure after two deletions')
+          }
+        },
+      ]
+      try {
+        await expect(
+          payload.delete({
+            id: root.id,
+            collection: 'comments',
+            overrideAccess: false,
+            req,
+            user: asUser(author),
+          }),
+        ).rejects.toThrow('Unexpected failure after two deletions')
+        expect(deletedIDs).toEqual(expect.arrayContaining([first.id, second.id]))
+        expect(deletedIDs).toHaveLength(2)
+        expect(transactionIDs.size).toBe(1)
+        const remaining = await payload.find({
+          collection: 'comments',
+          depth: 0,
+          where: { id: { in: [root.id, first.id, second.id] } },
+        })
+        expect(remaining.totalDocs).toBe(3)
+        expect(remaining.docs.map(({ id, parent }) => ({ id, parent: parent ?? null }))).toEqual(
+          expect.arrayContaining([
+            { id: root.id, parent: null },
+            { id: first.id, parent: root.id },
+            { id: second.id, parent: root.id },
+          ]),
+        )
+      } finally {
+        hooks.afterDelete = previous
+      }
+    },
+  )
 
   test('a failed reply deletion prevents deletion of the root', async () => {
     const root = await payload.create({
