@@ -1,5 +1,5 @@
-// Surlignages de commentaires actifs (MarkNode). Les fils resolus n'ont
-// plus de mark dans l'editeur — voir unwrap / rewrap dans feature.client.tsx.
+// Highlights for open comment threads (MarkNode). Resolved threads no longer
+// have a mark in the editor — see unwrap / rewrap in feature.client.tsx.
 
 .rich-text-lexical mark {
   background: color-mix(in srgb, var(--theme-warning-200, #fde68a) 80%, transparent);
@@ -27,7 +27,7 @@
   }
 }
 
-// Popup d'apercu au survol d'un surlignage (portal sur document.body).
+// Preview popup shown when hovering a highlight (portal on document.body).
 .comments-mark-preview {
   position: absolute;
   z-index: var(--z-modal, 100);

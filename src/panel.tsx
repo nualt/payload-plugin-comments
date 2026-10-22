@@ -2,8 +2,8 @@
 
 /* eslint-disable jsx-a11y/no-autofocus -- Preserve focus on the newly selected passage's draft. */
 
-// Panneau de commentaires (sidebar permanente, champ UI). Se connecte a la
-// feature lexical via le bus d'evenements `./events`.
+// Comments panel (always-on sidebar, UI field). Talks to the Lexical
+// feature through the `./events` event bus.
 import {
   Button,
   toast,
@@ -169,7 +169,7 @@ function writePersistedPendingDrafts(key: string, data: Record<string, PendingDr
       sessionStorage.setItem(key, JSON.stringify(data))
     }
   } catch {
-    /* quota depasse ou storage indisponible */
+    /* quota exceeded or storage unavailable */
   }
 }
 
@@ -359,7 +359,7 @@ export function CommentsPanel({
     void fetchThreads()
   }, [fetchThreads])
 
-  // Metadonnees des fils -> apercu au survol des surlignages dans l'editeur.
+  // Thread metadata -> hover preview of highlights in the editor.
   useEffect(() => {
     if (status !== 'ready') {
       return

@@ -35,7 +35,7 @@ const storedComment = {
                 format: 0,
                 mode: 'normal',
                 style: '',
-                text: 'passage commenté',
+                text: 'commented passage',
                 version: 1,
               },
             ],
@@ -61,7 +61,7 @@ const storedComment = {
   },
 }
 
-test('la feature commentaires conserve les IDs stockés et supporte wrap/getIDs/unwrap avec Payload 3.90', () => {
+test('the comments feature keeps stored IDs and supports wrap/getIDs/unwrap with Payload 3.90', () => {
   assert.equal(typeof commentsFeature, 'function')
 
   const editor = createHeadlessEditor({ nodes: [MarkNode] })

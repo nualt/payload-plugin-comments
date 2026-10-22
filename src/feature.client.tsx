@@ -1,11 +1,11 @@
 'use client'
 
 import type { ToolbarGroupItem } from '@payloadcms/richtext-lexical'
-// Feature lexical commentaires (client). Absorbe le pont mark-node-feature :
-// declare MarkNode cote client (nodes) et ajoute la vraie UI :
-// - bouton toolbar "Commenter" : genere un threadId, enveloppe la selection
-//   dans un MarkNode, dispatch l'evenement `draft`.
-// - plugins : clics / survol sur les marks, unwrap / rewrap, apercu.
+// Lexical comments feature (client). Replaces the mark-node-feature bridge:
+// registers MarkNode on the client (nodes) and adds the actual UI:
+// - "Comment" toolbar button: generates a threadId, wraps the selection
+//   in a MarkNode, dispatches the `draft` event.
+// - plugins: clicks / hover on marks, unwrap / rewrap, preview.
 import type { LexicalEditor } from '@payloadcms/richtext-lexical/lexical'
 
 import {
@@ -325,7 +325,7 @@ function CommentMarkPreviewPlugin() {
     }
   }, [editor, isOverMarkOrPopup])
 
-  // Ferme la popup des que le pointeur quitte mark + popup (sans attendre mouseleave).
+  // Closes the popup as soon as the pointer leaves mark + popup (without waiting for mouseleave).
   useEffect(() => {
     if (!preview) {
       return
